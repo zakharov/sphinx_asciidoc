@@ -17,11 +17,11 @@ from docutils import writers, nodes
 import sys
 
 from sphinx import addnodes
-#from sphinx.deprecation import RemovedInSphinx16Warning
+# from sphinx.deprecation import RemovedInSphinx16Warning
 from sphinx.locale import admonitionlabels, _
 
-class AsciiDocWriter(writers.Writer):
 
+class AsciiDocWriter(writers.Writer):
     supported = ('asciidoc',)
     output = None
 
@@ -33,6 +33,7 @@ class AsciiDocWriter(writers.Writer):
         visitor = self._translator_class(self.document)
         self.document.walkabout(visitor)
         self.output = visitor.astext()
+
 
 def toansi(text):
     """ Encode special characters """
@@ -52,38 +53,38 @@ def toansi(text):
     return out
 
 
-sectionEquals = { # Stores values for different section levels
+sectionEquals = {  # Stores values for different section levels
     -1: '',
-     0: '= ', #title
-     1: '== ', # section
-     2: '=== ', # subsection
-     3: '==== ', # subsubsection
-    }
+    0: '= ',  # title
+    1: '== ',  # section
+    2: '=== ',  # subsection
+    3: '==== ',  # subsubsection
+}
 
+bulletIndent = {  # Adds indentation to bullet lists
+    1: '* ',  # First level
+    2: '** ',  # Second level
+    3: '*** ',  # Third level
+    4: '**** ',  # Fourth level
+    5: '***** ',  # Fifth level
+}
 
-bulletIndent = { # Adds indentation to bullet lists
-    1:'* ',   # First level
-    2:'** ', # Second level
-    3:'*** ', # Third level
-    4:'**** ', # Fourth level
-    5:'***** ', # Fifth level
-    }
+enumIndent = {  # Adds indentation to ordered lists
+    1: '. ',  # First level
+    2: '.. ',  # Second level
+    3: '... ',  # Third level
+    4: '.... ',  # Fourth level
+    5: '..... ',  # Fifth level
+}
 
-enumIndent = { # Adds indentation to ordered lists
-    1:'. ',   # First level
-    2:'.. ', # Second level
-    3:'... ', # Third level
-    4:'.... ', # Fourth level
-    5:'..... ', # Fifth level
-    }
-
-numberIndent = {} # Holds the level of indentation
+numberIndent = {}  # Holds the level of indentation
 
 
 def indent(fn):
     def wrapper(self, *args, **kwargs):
         self.par_level += 1
         return fn(self, *args, **kwargs)
+
     return wrapper
 
 
@@ -91,10 +92,11 @@ def dedent(fn):
     def wrapper(self, *args, **kwargs):
         self.par_level -= 1
         return fn(self, *args, **kwargs)
+
     return wrapper
 
-class AsciiDocTranslator(nodes.NodeVisitor):
 
+class AsciiDocTranslator(nodes.NodeVisitor):
     def __init__(self, document):
         nodes.NodeVisitor.__init__(self, document)
         self.body = []
@@ -103,8 +105,8 @@ class AsciiDocTranslator(nodes.NodeVisitor):
 
         self.lists = []  # stack of the currents bullets
         self.listLevel = len(self.lists)
-        self.bullet = '*' # next one to add to the next paragraph
-        self.figures = 0 # Counts figures for reference targets
+        self.bullet = '*'  # next one to add to the next paragraph
+        self.figures = 0  # Counts figures for reference targets
         self.inTable = False
         self.turnsInList = 0
         self.inDesc = False
@@ -112,13 +114,12 @@ class AsciiDocTranslator(nodes.NodeVisitor):
         self.extLinkActive = False
         self.inAdmonition = False
         self.tabColSpecs = []
-        self.inLineBlock = False
 
     def astext(self):
         return ''.join(self.body)
 
     def visit_document(self, node):
-        #self.body.append('Start document')
+        # self.body.append('Start document')
         pass
 
     def depart_document(self, node):
@@ -136,28 +137,25 @@ class AsciiDocTranslator(nodes.NodeVisitor):
                 tstr = '= '
             self.body.append('\n\n%s ' % tstr)
         elif isinstance(node.parent, nodes.table):
-            self.body.append('\n.') # Table title
+            self.body.append('\n.')  # Table title
 
     def depart_title(self, node):
         if isinstance(node.parent, nodes.table):
-            self.body.append('\n') # Table title
+            self.body.append('\n')  # Table title
         else:
             self.body.append('\n\n')
 
     def visit_Text(self, node):
-##        if self.bullet is not None:
-##            self.body.append(self.bullet+'')
-##            self.bullet = None
-##        self.body.append(toansi(node.astext()))
-        if self.inLineBlock == True:
-            self.body.append(node.astext()+' +')
-        else:
-            self.body.append(node.astext())
+        ##        if self.bullet is not None:
+        ##            self.body.append(self.bullet+'')
+        ##            self.bullet = None
+        ##        self.body.append(toansi(node.astext()))
+        self.body.append(node.astext())
 
     def depart_Text(self, node):
         pass
 
-    def visit_strong(self, node): # Does the bold face
+    def visit_strong(self, node):  # Does the bold face
         nline = '*'
         self.body.append(nline)
 
@@ -165,12 +163,12 @@ class AsciiDocTranslator(nodes.NodeVisitor):
         nline = '*'
         self.body.append(nline)
 
-    def visit_index(self,node):
-        #self.body.append('((')
+    def visit_index(self, node):
+        # self.body.append('((')
         pass
 
-    def depart_index(self,node):
-        #self.body.append('))')
+    def depart_index(self, node):
+        # self.body.append('))')
         pass
 
     def visit_section(self, node):
@@ -211,7 +209,7 @@ class AsciiDocTranslator(nodes.NodeVisitor):
             nline = '\n'
         self.body.append(nline)
 
-    def visit_bullet_list(self, node): # Unordered list
+    def visit_bullet_list(self, node):  # Unordered list
         self.inList = True
         self.lists.append('bulleted')
         if self.turnsInList == 0:
@@ -227,14 +225,14 @@ class AsciiDocTranslator(nodes.NodeVisitor):
         self.turnsInList = 0
         self.inList = False
 
-    def visit_enumerated_list(self, node): # Ordered list
+    def visit_enumerated_list(self, node):  # Ordered list
         self.inList = True
         self.lists.append('numbered')
         enumeration = node['enumtype']
-        self.body.append('\n['+enumeration+']\n')
+        self.body.append('\n[' + enumeration + ']\n')
         self.turnsInList = self.turnsInList + 1
 
-    def depart_enumerated_list(self,node):
+    def depart_enumerated_list(self, node):
         self.lists.pop(-1)
         self.turnsInList = 0
         self.inList = False
@@ -264,9 +262,10 @@ class AsciiDocTranslator(nodes.NodeVisitor):
         pass
 
     def visit_reference(self, node):
-        #print('IDS: '+str(node.get('ids')))
-        #print('REFURI: '+str(node.get('refuri')))
-        #print('REFID: '+str(node.get('refid')))
+
+        # print('IDS: '+str(node.get('ids')))
+        # print('REFURI: '+str(node.get('refuri')))
+        # print('REFID: '+str(node.get('refid')))
         self.extLinkActive = True
         uri = node.get('refuri')
         refid = node.get('refid')
@@ -319,7 +318,7 @@ class AsciiDocTranslator(nodes.NodeVisitor):
     def depart_copyright(self, node):
         self.body.append('\n\n')
 
-    def visit_rubric(self, node): # This holds a place for some listings, such as footnotes.
+    def visit_rubric(self, node):  # This holds a place for some listings, such as footnotes.
         self.body.append('\n')
         self.body.append('.')
 
@@ -328,44 +327,51 @@ class AsciiDocTranslator(nodes.NodeVisitor):
 
     def visit_topic(self, node):
         self.body.append('[verse]\n.')
+
     def depart_topic(self, node):
         self.body.append('')
-    
+
     def visit_sidebar(self, node):
         self.body.append('****\n')
+
     def depart_sidebar(self, node):
         self.body.append('****')
 
-    def visit_target(self, node): # Create internal inline links.
+    def visit_target(self, node):  # Create internal inline links.
         if self.extLinkActive == False:
-            refid = node.get('refid')
-            self.body.append('[id="%s"]' % refid)
-            #try:
-            #    refid = node.get('refid')
-            #except IndexError:
-            #    refid = False
-            #refuri = node.get('refuri')
-            #refnames = node.get('names')
+            try:
+                refid = node.get('ids')
+                refid = refid[-1]
+            except IndexError:
+                refid = False
+            refuri = node.get('refuri')
+            refnames = node.get('names')
 
-            #if refid != False:
-            #    if refuri:
-            #        if refnames == None:
-            #            refnames = ''
-            #        else:
-            #            refnames = refnames[0]
-            #        self.body.append('link:++%s++[%s]' % (refuri,refnames))
-            #    else:
-            #        self.body.append('[[%s]]' % refid)
-            #else:
-            #    pass
+            if refid != False:
+                if refuri:
+                    if refnames == None:
+                        refnames = ''
+                    else:
+                        refnames = refnames[0]
+                    self.body.append('link:++%s++[%s]' % (refuri, refnames))
+                else:
+                    self.body.append('[[%s]]' % refid)
+            else:
+                pass
         else:
             pass
+            # try:
+            #    refid = node.get('refid')
+            #    print refid
+            #    self.body.append('[[%s]]' % refid)
+            # except KeyError:
+            #    pass
 
     def depart_target(self, node):
-        #self.body.append(']')
+        # self.body.append(']')
         self.extLinkActive = False
 
-    def visit_compound(self, node): 
+    def visit_compound(self, node):
         self.body.append('====')
 
     def depart_compound(self, node):
@@ -384,7 +390,7 @@ class AsciiDocTranslator(nodes.NodeVisitor):
         else:
             nline = '[NOTE]\n'
         mline = '====\n'
-        self.body.append(nline+mline)
+        self.body.append(nline + mline)
 
     def depart_note(self, node):
         if self.inList == True:
@@ -427,7 +433,7 @@ class AsciiDocTranslator(nodes.NodeVisitor):
 
     def depart_emphasis(self, node):
         self.body.append('_')
-    
+
     def visit_literal_emphasis(self, node):
         nline = ' `*'
         self.body.append(nline)
@@ -442,7 +448,7 @@ class AsciiDocTranslator(nodes.NodeVisitor):
         else:
             nline = '[TIP]\n'
         mline = '====\n'
-        self.body.append(nline+mline)
+        self.body.append(nline + mline)
 
     def depart_tip(self, node):
         if self.inList == True:
@@ -459,7 +465,7 @@ class AsciiDocTranslator(nodes.NodeVisitor):
         else:
             nline = '[WARNING]\n'
         mline = '====\n'
-        self.body.append(nline+mline)
+        self.body.append(nline + mline)
 
     def depart_warning(self, node):
         if self.inList == True:
@@ -488,7 +494,7 @@ class AsciiDocTranslator(nodes.NodeVisitor):
         else:
             nline = '[IMPORTANT]\n'
         mline = '====\n'
-        self.body.append(nline+mline)
+        self.body.append(nline + mline)
 
     def depart_important(self, node):
         if self.inList == True:
@@ -499,15 +505,15 @@ class AsciiDocTranslator(nodes.NodeVisitor):
         self.inAdmonition = False
 
     def visit_caution(self, node):
-        self.inAdmonition = True 
+        self.inAdmonition = True
         if self.inList == True:
             nline = '+\n[CAUTION]\n'
         else:
             nline = '[CAUTION]\n'
         mline = '====\n'
-        self.body.append(nline+mline)
+        self.body.append(nline + mline)
 
-    def depart_caution(self, node): # FIXME: change to level = len(self.lists)
+    def depart_caution(self, node):  # FIXME: change to level = len(self.lists)
         if self.inList == True:
             nline = '====\n\n'
         else:
@@ -528,8 +534,8 @@ class AsciiDocTranslator(nodes.NodeVisitor):
         self.body.append('\n')
 
     def visit_term(self, node):
-        #nline = ''
-        #self.body.append(nline)
+        # nline = ''
+        # self.body.append(nline)
         pass
 
     def depart_term(self, node):
@@ -539,106 +545,106 @@ class AsciiDocTranslator(nodes.NodeVisitor):
         nline = '\n'
         self.body.append(nline)
 
-    def depart_definition(self,node):
+    def depart_definition(self, node):
         self.body.append('\n\n')
 
-    def visit_image(self,node):
+    def visit_image(self, node):
         try:
-            alt = node.get('alt')
+            alt = node['alt']
         except KeyError:
             alt = 'Image'
 
-        uri = node.get('uri')
-        #tag = str(node)
-        #parsed = tag.split(' ')
-        #for feature in parsed:
+        uri = node['uri']
+        # tag = str(node)
+        # parsed = tag.split(' ')
+        # for feature in parsed:
         #    if 'uri' in feature:
         #        ptag = feature.split('"')
         #        path = ptag[1]
-        #for feature in parsed:
+        # for feature in parsed:
         #    if 'alt' in feature:
         #        palt = feature.split('"')
         #        alt = palt[1]
         #        break
         #    else:
         #        alt = 'Image'
-        nline = 'image::%s[%s]' % uri, alt
+        nline = 'image::' + uri + '[' + alt + ']'
         self.body.append(nline)
 
-    def depart_image(self,node):
+    def depart_image(self, node):
         self.body.append('\n\n')
 
-    def visit_footnote_reference(self,node):
+    def visit_footnote_reference(self, node):
         try:
             ref = str(node.get('refid')[0])
-            nline = "footnoteref:["+ref+","
+            nline = "footnoteref:[" + ref + ","
         except KeyError:
             pass
         self.body.append(nline)
 
-    def depart_footnote_reference(self,node):
+    def depart_footnote_reference(self, node):
         nline = "] "
         self.body.append(nline)
 
-    def visit_footnote(self,node):
-        #nline = "footnote:["
-        #self.body.append(nline)
+    def visit_footnote(self, node):
+        # nline = "footnote:["
+        # self.body.append(nline)
         pass
 
-    def depart_footnote(self,node):
+    def depart_footnote(self, node):
         nline = "\n"
         self.body.append(nline)
 
-    def visit_label(self,node):
+    def visit_label(self, node):
         self.body.append('[[*')
 
-    def depart_label(self,node):
+    def depart_label(self, node):
         self.body.append('*]]')
 
-    def visit_contents(self,node):
+    def visit_contents(self, node):
         nline = '== '
         self.body.append(nline)
 
-    def depart_contents(self,node):
+    def depart_contents(self, node):
         pass
 
-    def visit_system_message(self,node):
+    def visit_system_message(self, node):
         self.body.append('System message: ')
 
-    def depart_system_message(self,node):
-        #self.body.append('')
+    def depart_system_message(self, node):
+        # self.body.append('')
         pass
 
     def visit_figure(self, node):
         ids = str(node['ids'])
         count = str(self.figures)
         nline = '\n[[ids]]\n'
-        mline = '.'+ids+'\n'
-        self.body.append(nline+mline)
+        mline = '.' + ids + '\n'
+        self.body.append(nline + mline)
 
     def depart_figure(self, node):
         self.body.append('\n\n')
 
-    def visit_caption(self,node):
-        self.body.append('\n//.')
+    def visit_caption(self, node):
+        self.body.append('//.')
 
-    def depart_caption(self,node):
+    def depart_caption(self, node):
         self.body.append('\n')
 
-    def visit_table(self,node): ## Whole table element
+    def visit_table(self, node):  ## Whole table element
         self.inTable = True
 
-    def depart_table(self,node):
+    def depart_table(self, node):
         self.inTable = False
 
-    def visit_tgroup(self,node): ## Whole inside of the table
+    def visit_tgroup(self, node):  ## Whole inside of the table
         cols = node['cols']
         specs = self.tabColSpecs
         col = int(round((100 / cols)))
-        clist = [col,]*cols
+        clist = [col, ] * cols
         if specs == []:
-            specs = ['<',]*cols
-        #for i in range(cols):
+            specs = ['<', ] * cols
+        # for i in range(cols):
         #   clist.append(str(col))
         cline = ''
         for spec in specs:
@@ -648,147 +654,144 @@ class AsciiDocTranslator(nodes.NodeVisitor):
             elif str(spec).lower() == 'c':
                 specs[i] = '^'
             elif type(spec) != int:
-                specs[i] = '<'        
+                specs[i] = '<'
         for c in range(len(clist)):
-            #i = clist.index(c)
-            if (c+1) < len(clist):
+            # i = clist.index(c)
+            if (c + 1) < len(clist):
                 cline = cline + str(specs[c]) + str(clist[c]) + ','
             else:
-                cline = cline + str(specs[c]) + str(clist[c]) 
+                cline = cline + str(specs[c]) + str(clist[c])
 
-        specline = '[cols="'+cline+'",options="header"]\n'
+        specline = '[cols="' + cline + '",options="header"]\n'
         introline = "|===\nh| "
-        self.body.append(specline+introline)
+        self.body.append(specline + introline)
 
-    def depart_tgroup(self,node):
+    def depart_tgroup(self, node):
         nline = '|===\n'
         self.body.append(nline)
 
-    def visit_colspec(self,node): ## Column specifics
+    def visit_colspec(self, node):  ## Column specifics
         pass
 
-    def depart_colspec(self,node):
+    def depart_colspec(self, node):
         pass
 
-    def visit_tabular_col_spec(self,node): ## Column specifics
+    def visit_tabular_col_spec(self, node):  ## Column specifics
         specs = node.get("spec").split("|")
         del specs[-1]
         del specs[0]
         self.tabColSpecs = specs
 
-    def depart_tabular_col_spec(self,node):
-        pass
-    
-    def visit_thead(self,node): ## Table head
+    def depart_tabular_col_spec(self, node):
         pass
 
-    def depart_thead(self,node):
+    def visit_thead(self, node):  ## Table head
         pass
 
-    def visit_row(self,node): # Table row
-##        nline = ''
-##        self.body.append(nline)
+    def depart_thead(self, node):
         pass
 
-    def depart_row(self,node):
+    def visit_row(self, node):  # Table row
+        ##        nline = ''
+        ##        self.body.append(nline)
+        pass
+
+    def depart_row(self, node):
         self.body.append('\n')
 
-    def visit_entry(self,node): # Table cell
+    def visit_entry(self, node):  # Table cell
         nline = ''
         self.body.append('')
 
-
-    def depart_entry(self,node):
+    def depart_entry(self, node):
         self.body.append('a| ')
 
-    def visit_tbody(self,node):
+    def visit_tbody(self, node):
         pass
 
-    def depart_tbody(self,node):
+    def depart_tbody(self, node):
         pass
 
-    def visit_subscript(self,node):
+    def visit_subscript(self, node):
         self.body.append('~')
 
-    def depart_subscript(self,node):
+    def depart_subscript(self, node):
         self.body.append('~')
 
-    def visit_superscript(self,node):
+    def visit_superscript(self, node):
         self.body.append('^')
 
-    def depart_superscript(self,node):
+    def depart_superscript(self, node):
         self.body.append('^')
 
-    def visit_title_reference(self,node): #This, in rst, was rendered as typeface font only.
+    def visit_title_reference(self, node):  # This, in rst, was rendered as typeface font only.
         self.body.append('`*')
 
-    def depart_title_reference(self,node):
+    def depart_title_reference(self, node):
         self.body.append('*`')
 
-    def visit_line_block(self,node):
-        self.inLineBlock = True
-        self.body.append('\n')
+    def visit_line_block(self, node):
+        self.body.append('[%hardbreaks]\n')
 
-    def depart_line_block(self,node):
-        self.body.append(' ')
-        self.inLineBlock = False
+    def depart_line_block(self, node):
+        self.body.append('')
 
-    def visit_line(self,node):
-        nlink=""
+    def visit_line(self, node):
+        nlink = ""
         self.body.append(nlink)
 
-    def depart_line(self,node):
+    def depart_line(self, node):
         self.body.append('\n')
 
-    def visit_comment(self,node):
+    def visit_comment(self, node):
         self.body.append('\n////\n')
 
-    def depart_comment(self,node):
+    def depart_comment(self, node):
         self.body.append('\n////\n\n')
 
-    def visit_problematic(self,node): # Occurs when the rst source files have an error in them.
+    def visit_problematic(self, node):  # Occurs when the rst source files have an error in them.
         self.body.append('*Problematic*, check error messages! : ')
 
-    def depart_problematic(self,node):
+    def depart_problematic(self, node):
         self.body.append('')
 
-    def visit_meta(self,node):
+    def visit_meta(self, node):
         name = str(node.get('name'))
         content = str(node.get('content'))
-        self.body.append(':'+name+':'+' '+content)
+        self.body.append(':' + name + ':' + ' ' + content)
 
-    def depart_meta(self,node):
+    def depart_meta(self, node):
         self.body.append('\n')
 
-    def visit_transition(self,node):
+    def visit_transition(self, node):
         self.body.append("\n'''")
 
-    def depart_transition(self,node):
+    def depart_transition(self, node):
         self.body.append('\n')
-    
-    def visit_manpage(self,node):
-        self.body.append("_")
 
-    def depart_manpage(self,node):
+    def visit_manpage(self, node):
+        self.body.append('_')
+
+    def depart_manpage(self, node):
         self.body.append('_')
         pass
-    
-    def visit_raw(self,node):
+
+    def visit_raw(self, node):
         self.body.append('RAW: ')
 
-    def depart_raw(self,node):
+    def depart_raw(self, node):
         self.body.append('')
 
-    def visit_subtitle(self,node):
+    def visit_subtitle(self, node):
         self.body.append('SUBTITLE: ')
 
-    def depart_subtitle(self,node):
+    def depart_subtitle(self, node):
         self.body.append('')
 
-    def visit_inline(self,node): # Leave passed
+    def visit_inline(self, node):  # Leave passed
         pass
 
-    def depart_inline(self,node):
+    def depart_inline(self, node):
         pass
 
     def visit_desc(self, node):
@@ -800,10 +803,11 @@ class AsciiDocTranslator(nodes.NodeVisitor):
         self.body.append('\n')
 
     def visit_desc_signature(self, node):
-        self.body.append('DESCSIGNATURE: ')
+        self.body.append('\n')
 
     def depart_desc_signature(self, node):
-        self.body.append(':DESCSIGNATURE')
+        self.body.append('\n')
+        # self.body.append(':DESCSIGNATURE')
 
     def visit_desc_signature_line(self, node):
         self.body.append('DESCSIGLINE:')
@@ -812,16 +816,16 @@ class AsciiDocTranslator(nodes.NodeVisitor):
         self.body.append('DESCSIGLINE')
 
     def visit_desc_name(self, node):
-        self.body.append('DESCNAME:')
+        self.body.append('**')
 
     def depart_desc_name(self, node):
-        self.body.append(':DESCNAME')
+        self.body.append('**')
 
     def visit_desc_addname(self, node):
-        self.body.append('DESCADDNAME')
+        self.body.append('**')
 
     def depart_desc_addname(self, node):
-        self.body.append(':DESCADDNAME')
+        self.body.append('**')
 
     def visit_desc_type(self, node):
         self.body.append('DESCTYPE:')
@@ -836,16 +840,16 @@ class AsciiDocTranslator(nodes.NodeVisitor):
         self.body.append(':DESCRETURNS')
 
     def visit_desc_parameterlist(self, node):
-        self.body.append('DESCPARALIST:')
+        self.body.append('_')
 
     def depart_desc_parameterlist(self, node):
-        self.body.append(':DESCPARALIST')
+        self.body.append('_')
 
     def visit_desc_parameter(self, node):
-        self.body.append('DESCPARAMETER:')
+        self.body.append('(')
 
-    def depart_desc_parameter(self,node):
-        self.body.append(':DESCPARAMETER')
+    def depart_desc_parameter(self, node):
+        self.body.append(')')
 
     def visit_desc_optional(self, node):
         self.body.append(':DESCOPTIONAL')
@@ -854,36 +858,36 @@ class AsciiDocTranslator(nodes.NodeVisitor):
         self.body.append('DESCOPTIONAL:')
 
     def visit_desc_annotation(self, node):
-        self.body.append(':DESCANNOTATION')
+        self.body.append('_')
 
     def depart_desc_annotation(self, node):
-        self.body.append('DESCANNOTATION:')
+        self.body.append('_ ')
 
     def visit_desc_content(self, node):
-        self.body.append(':DESCCONTENT')
+        self.body.append('\n')
 
     def depart_desc_content(self, node):
-        self.body.append('DESCCONTENT:')
+        self.body.append('\n')
 
     def visit_productionlist(self, node):
-    #   self.new_state()
-    #   names = []
-    #  for production in node:
-    #      names.append(production['tokenname'])
-    #  maxlen = max(len(name) for name in names)
-    #  lastname = None
-    #  for production in node:
-    #      if production['tokenname']:
-    #          self.add_text(production['tokenname'].ljust(maxlen) + ' ::=')
-    #          lastname = production['tokenname']
-    #      elif lastname is not None:
-    #          self.add_text('%s    ' % (' ' * len(lastname)))
-    #      self.add_text(production.astext() + self.nl)
-    #  self.end_state(wrap=False)
-    #  raise nodes.SkipNode
+        #   self.new_state()
+        #   names = []
+        #  for production in node:
+        #      names.append(production['tokenname'])
+        #  maxlen = max(len(name) for name in names)
+        #  lastname = None
+        #  for production in node:
+        #      if production['tokenname']:
+        #          self.add_text(production['tokenname'].ljust(maxlen) + ' ::=')
+        #          lastname = production['tokenname']
+        #      elif lastname is not None:
+        #          self.add_text('%s    ' % (' ' * len(lastname)))
+        #      self.add_text(production.astext() + self.nl)
+        #  self.end_state(wrap=False)
+        #  raise nodes.SkipNode
         self.body.append('PRODUCTIONLIST:')
 
-    def depart_production_list(self,node):
+    def depart_production_list(self, node):
         self.body.append(':PRODUCTIONLIST')
 
     def visit_option_list(self, node):
@@ -982,96 +986,98 @@ class AsciiDocTranslator(nodes.NodeVisitor):
     def depart_versionmodified(self, node):
         self.body.append('')
 
-    def visit_date(self,node):
+    def visit_date(self, node):
         self.body.append('Date:')
 
-    def depart_date(self,node):
+    def depart_date(self, node):
         self.body.append(':Date')
 
-    def visit_revision(self,node):
+    def visit_revision(self, node):
         self.body.append('Revision:')
 
-    def depart_revision(self,node):
+    def depart_revision(self, node):
         self.body.append(':Revision')
 
-    def visit_doctest_block(self,node):
-        self.body.append('DocTestBlok:')
+    def visit_doctest_block(self, node):
+        self.body.append('[source, python]\n')
 
-    def depart_doctest_block(self,node):
-        self.body.append(':DocTestBlok')
+    def depart_doctest_block(self, node):
+        self.body.append('\n')
 
-    def visit_classifier(self,node):
+    def visit_classifier(self, node):
         self.body.append('Classifier:')
 
-    def depart_classifier(self,node):
+    def depart_classifier(self, node):
         self.body.append(':Classifier')
 
-    def visit_citation(self,node):
+    def visit_citation(self, node):
         self.body.append('')
 
-    def depart_citation(self,node):
+    def depart_citation(self, node):
         self.body.append('')
 
-    def visit_citation_reference(self,node):
+    def visit_citation_reference(self, node):
         self.body.append('CitationRFR:')
 
-    def depart_citation_reference(self,node):
+    def depart_citation_reference(self, node):
         self.body.append(':CitationRFR')
 
-    def visit_substitution_definition(self,node):
+    def visit_substitution_definition(self, node):
         name = node.get('names')[0]
-        self.body.append('\n:'+name+': ')
+        self.body.append('\n:' + name + ': ')
 
-    def depart_substitution_definition(self,node):
+    def depart_substitution_definition(self, node):
         self.body.append('\n')
-        
-    def visit_abbreviation(self,node):
-        pass # FIXME: We lose explanation this way
 
-    def depart_abbreviation(self,node):
-        pass # FIXME: We lose explanation this way
+    def visit_abbreviation(self, node):
+        pass  # FIXME: We lose explanation this way
 
-    def visit_seealso(self,node):
+    def depart_abbreviation(self, node):
+        pass  # FIXME: We lose explanation this way
+
+    def visit_seealso(self, node):
         self.body.append('See also: ')
 
-    def depart_seealso(self,node):
+    def depart_seealso(self, node):
         pass
-    
-    def visit_todo_node(self,node):
+
+    def visit_todo_node(self, node):
         self.body.append('To do: ')
 
-    def depart_todo_node(self,node):
+    def depart_todo_node(self, node):
         pass
 
-    def visit_download_reference(self,node):
+    def visit_download_reference(self, node):
         self.body.append('Download reference: ')
 
-    def depart_download_reference(self,node):
+    def depart_download_reference(self, node):
         pass
-    
-    def visit_graphviz(self,node):
+
+    def visit_graphviz(self, node):
         self.body.append('Graphviz: ')
 
-    def depart_graphviz(self,node):
+    def depart_graphviz(self, node):
         pass
 
-    def visit_container(self,node):
+    def visit_container(self, node):
         self.body.append('[stem]\n')
         self.body.append('++++')
 
-    def depart_container(self,node):
+    def depart_container(self, node):
         self.body.append('++++')
+
 
 if __name__ == "__main__":
     """ To test the writer """
     from docutils.core import publish_string
+
     filename = sys.argv[-1]
-    print('Converting: '+ filename)
+    print('Converting: ' + filename)
     f_in = open(filename, 'rb')
     rtf = publish_string(f_in.read(), writer=AsciiDocWriter())
     f_in.close()
 
-    filename = filename+'.adoc'
+    filename = filename + '.adoc'
 
     f_out = open(filename, 'wb')
     f_out.write(rtf)
